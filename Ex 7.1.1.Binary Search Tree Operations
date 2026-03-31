@@ -1,0 +1,198 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+struct TreeNode {
+	int val;
+	struct TreeNode* left;
+	struct TreeNode* right;
+};
+
+static struct TreeNode* createNode(int x) {
+    struct TreeNode* n = (struct TreeNode*)malloc(sizeof(struct TreeNode));
+    n->val = x;
+    n->left = NULL;
+    n->right = NULL;
+    return n;
+}
+
+/* Duplicates go to RIGHT subtree */
+struct TreeNode* insertNode(struct TreeNode* root, int data) {
+    if (root == NULL) return createNode(data);
+
+    if (data < root->val)
+        root->left = insertNode(root->left, data);
+    else
+        root->right = insertNode(root->right, data);
+
+    return root;
+}
+
+/* Traversal helpers (do not print "empty" here) */
+static void inorderPrint(struct TreeNode* root) {
+    if (root == NULL) return;
+    inorderPrint(root->left);
+    printf("%d ", root->val);
+    inorderPrint(root->right);
+}
+
+static void preorderPrint(struct TreeNode* root) {
+    if (root == NULL) return;
+    printf("%d ", root->val);
+    preorderPrint(root->left);
+    preorderPrint(root->right);
+}
+
+static void postorderPrint(struct TreeNode* root) {
+    if (root == NULL) return;
+    postorderPrint(root->left);
+    postorderPrint(root->right);
+    printf("%d ", root->val);
+}
+
+/* Wrappers required by menu */
+void inorderTraversal(struct TreeNode* root) {
+    if (root == NULL) {
+        printf("The tree is empty\n");
+        return;
+    }
+    inorderPrint(root);
+    printf("\n");
+}
+
+void preorderTraversal(struct TreeNode* root) {
+    if (root == NULL) {
+        printf("The tree is empty\n");
+        return;
+    }
+    preorderPrint(root);
+    printf("\n");
+}
+
+void postorderTraversal(struct TreeNode* root) {
+    if (root == NULL) {
+        printf("The tree is empty\n");
+        return;
+    }
+    postorderPrint(root);
+    printf("\n");
+}
+
+/* Minimum node in subtree */
+static struct TreeNode* minValueNode(struct TreeNode* node) {
+    struct TreeNode* cur = node;
+    while (cur != NULL && cur->left != NULL) cur = cur->left;
+    return cur;
+}
+
+/* Delete one occurrence; set *found = 1 if deleted */
+struct TreeNode* deleteNode(struct TreeNode* root, int key, int* found) {
+    if (root == NULL) return NULL;
+
+    if (key < root->val) {
+        root->left = deleteNode(root->left, key, found);
+    } else if (key > root->val) {
+        root->right = deleteNode(root->right, key, found);
+    } else {
+        *found = 1;
+
+        /* 0 or 1 child */
+        if (root->left == NULL) {
+            struct TreeNode* temp = root->right;
+            free(root);
+            return temp;
+        } else if (root->right == NULL) {
+            struct TreeNode* temp = root->left;
+            free(root);
+            return temp;
+        }
+
+        /* 2 children: inorder successor (min in right subtree) */
+        struct TreeNode* succ = minValueNode(root->right);
+        root->val = succ->val;
+
+        /* delete successor node */
+        root->right = deleteNode(root->right, succ->val, found);
+    }
+    return root;
+}
+
+void freeTree(struct TreeNode* root) {
+    if (root == NULL) return;
+    freeTree(root->left);
+    freeTree(root->right);
+    free(root);
+}
+
+
+/*struct TreeNode* insertNode(   ) {
+	
+}
+
+
+void inorderTraversal(  ) {
+
+}
+
+void preorderTraversal(  ) {
+
+}
+
+void postorderTraversal(  ) {
+
+}
+
+struct TreeNode* deleteNode(  ) {
+	
+}*/
+
+
+
+int main() {
+    struct TreeNode* root = NULL;
+    int choice, data;
+
+    while (1) {
+        printf("1. Insert Node\n");
+        printf("2. In-Order Traversal\n");
+        printf("3. Pre-Order Traversal\n");
+        printf("4. Post-Order Traversal\n");
+        printf("5. Delete Node\n");
+        printf("6. Exit\n");
+        printf("Choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Data: ");
+                scanf("%d", &data);
+                root = insertNode(root, data);
+                break;
+            case 2:
+                inorderTraversal(root);
+                break;
+            case 3:
+                preorderTraversal(root);
+                break;
+            case 4:
+                postorderTraversal(root);
+                break;
+            case 5: {
+                printf("Delete: ");
+                scanf("%d", &data);
+                int found = 0;
+                root = deleteNode(root, data, &found);
+                if (!found) {
+                    printf("Value not found\n");
+                }
+                break;
+            }
+            case 6:
+                freeTree(root);
+                exit(0);
+            default:
+                printf("Invalid choice\n");
+        }
+    }
+
+    return 0;
+}
